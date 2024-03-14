@@ -99,7 +99,7 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
                max_y: float = None, min_y: float = 0, min_x: float = None, max_x: float = None,
                voltage_unit_to_force: str = None, comparator_line: float = None, t0=None, selected_traces=None,
                show_0=True, centered_2_5_V=False, time_unit_to_force="ms", ground=0, invert_colors=False,
-               doted: dict = None) -> None:
+               doted: dict = None, legende: list = None) -> None:
     """
     Plots the full trace of 1 or 2 channels
     :param parsed_data: the data to plot (contains the units and one or two traces)
@@ -174,11 +174,19 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
 
     # plot the data
     if 1 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=linewidth1, color=color1, linestyle=line_style1)
+        if legende is None:
+            plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=linewidth1, color=color1, linestyle=line_style1)
+        else:
+            plt.plot(parsed_data[1][0], parsed_data[1][1], linewidth=linewidth1, color=color1, linestyle=line_style1, label=legende[0])
     if parsed_data[1][2] == []:
         pass
     elif 2 in selected_traces:
-        plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=linewidth2, color=color2, linestyle=line_style2)
+        if legende is None:
+            plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=linewidth2, color=color2, linestyle=line_style2)
+        else:
+            plt.plot(parsed_data[1][0], parsed_data[1][2], linewidth=linewidth2, color=color2, linestyle=line_style2, label=legende[1])
+    if legende is not None:
+        plt.legend(loc='upper right')
 
     # draw the comparator line
     if comparator_line is not None:
@@ -213,11 +221,14 @@ def draw_trace(parsed_data: list[list], title_text: str = None, is_digital: bool
 
         if max_y is None:
             max_y = (1 + 0.05) * get_trace_max(parsed_data, selected_traces)
-    # change the tiks if the data is centered around 2.5 V
-    if centered_2_5_V:
-        ax = plt.gca()
-        ax.set_yticks(list(ax.get_xticks()) + [get_trace_min(parsed_data, selected_traces), 2.5,
-                                               get_trace_max(parsed_data, selected_traces)])
+        # change the tiks if the data is centered around 2.5 V
+        if centered_2_5_V:
+            ax = plt.gca()
+
+            ax.set_yticks(list(ax.get_xticks()) + [min_y, get_trace_min(parsed_data, selected_traces), 2.5,
+                                                   get_trace_max(parsed_data, selected_traces), max_y] )
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+
     plt.ylim(min_y, max_y)
 
     # setting the x-axis limits
